@@ -136,6 +136,117 @@ docker compose up -d
 
 ## مشکلات رایج
 
+### خطای 403 موقع نصب Docker
+
+اگه این خطا رو دیدی:
+```
+curl: (22) The requested URL returned error: 403
+https://download.docker.com/...
+```
+
+**دلیل:** سرور نمیتونه به `download.docker.com` وصل بشه (تحریم یا بلاک)
+
+**راه‌حل:** Docker رو از ریپوی اوبونتو نصب کن (تحریم‌خور نیست):
+
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose-plugin
+sudo systemctl enable docker
+sudo systemctl start docker
+```
+
+بعد اسکریپت نصب رو دوباره اجرا کن.
+
+---
+
+### مشکل Docker Compose (نسخه قدیمی)
+
+اگه این خطا رو دیدی:
+```
+docker-compose: command not found
+```
+
+یا:
+```
+docker compose version
+# Docker Compose version v1.x.x (قدیمی)
+```
+
+**راه‌حل:** نسخه جدید (v2) رو نصب کن:
+
+```bash
+# حذف نسخه قدیمی (اگه هست)
+sudo apt remove docker-compose -y
+sudo rm -f /usr/local/bin/docker-compose
+
+# نصب نسخه جدید
+sudo apt update
+sudo apt install docker-compose-plugin -y
+```
+
+تست:
+
+```bash
+docker compose version
+# باید نشون بده: Docker Compose version v2.x.x
+```
+
+**نکته:** دستور جدید `docker compose` هست (با فاصله)، نه `docker-compose` (با خط تیره).
+
+---
+
+### کندی Pull کردن ایمیج‌ها
+
+اگه دانلود ایمیج‌های Docker کنده:
+
+**۱. تنظیم Docker Mirror ایرانی:**
+
+```bash
+sudo nano /etc/docker/daemon.json
+```
+
+این محتوا رو بذار:
+
+```json
+{
+  "registry-mirrors": [
+    "https://docker.arvancloud.ir"
+  ]
+}
+```
+
+بعد:
+
+```bash
+sudo systemctl restart docker
+```
+
+---
+
+### مشکل DNS
+
+اگه به اینترنت وصل نمیشی:
+
+```bash
+sudo nano /etc/resolv.conf
+```
+
+این رو بذار:
+
+```
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+```
+
+بعد:
+
+```bash
+sudo systemctl restart systemd-resolved
+ping google.com
+```
+
+---
+
 ### SSL نگرفت
 
 دامنه رو چک کن. `dig +short yourdomain.com` باید IP سرور رو بده. اگه تازه ست کردی صبر کن.

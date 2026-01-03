@@ -93,20 +93,52 @@ install_docker() {
         return
     fi
     log_info "Installing Docker..."
-    curl -fsSL https://get.docker.com | sh
+    
+    # Try official script first, fallback to apt
+    if curl -fsSL https://get.docker.com | sh 2>/dev/null; then
+        log_success "Docker installed from official script."
+    else
+        log_warning "Official Docker install failed, trying apt..."
+        apt-get update -qq
+        apt-get install -y -qq docker.io
+    fi
+    
     systemctl enable docker
     systemctl start docker
     log_success "Docker installed."
 }
 
 install_docker_compose() {
-    if command -v docker compose &> /dev/null; then
+    # Check if docker compose works
+    if docker compose version &> /dev/null; then
         log_success "Docker Compose is installed."
         return
     fi
+    
     log_info "Installing Docker Compose..."
-    apt-get update -qq && apt-get install -y -qq docker-compose-plugin
-    log_success "Docker Compose installed."
+    
+    # Try apt plugin first
+    if apt-get update -qq && apt-get install -y -qq docker-compose-plugin 2>/dev/null; then
+        log_success "Docker Compose plugin installed."
+        return
+    fi
+    
+    # Fallback: download binary directly
+    log_warning "Plugin not available, downloading binary..."
+    COMPOSE_VERSION="v2.24.0"
+    curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    
+    # Create plugin symlink
+    mkdir -p /usr/lib/docker/cli-plugins/
+    ln -sf /usr/local/bin/docker-compose /usr/lib/docker/cli-plugins/docker-compose
+    
+    if docker compose version &> /dev/null; then
+        log_success "Docker Compose installed."
+    else
+        log_error "Docker Compose installation failed!"
+        exit 1
+    fi
 }
 
 generate_secrets() {
