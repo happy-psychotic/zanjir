@@ -178,6 +178,9 @@ setup_caddyfile() {
 update_element_config() {
     log_info "Configuring Element..."
     
+    # Reset config from git to ensure placeholders exist
+    git checkout -- config/element-config.json 2>/dev/null || true
+    
     # Replace domain placeholder
     sed -i "s|\${DOMAIN}|${SERVER_ADDRESS}|g" config/element-config.json
     
@@ -190,9 +193,8 @@ update_element_config() {
 update_dendrite_config() {
     log_info "Configuring Dendrite..."
     
-    # Reset config files from git to ensure placeholders exist
+    # Reset config from git to ensure placeholders exist
     git checkout -- dendrite/dendrite.yaml 2>/dev/null || true
-    git checkout -- config/element-config.json 2>/dev/null || true
     
     # Now replace placeholders
     sed -i "s/\${DOMAIN}/${SERVER_ADDRESS}/g" dendrite/dendrite.yaml
