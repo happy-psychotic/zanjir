@@ -1,5 +1,5 @@
-# زنجیر⛓️ - Docker Compose Configuration
-# پیام‌رسان امن و غیرمتمرکز ایرانی‌شده بر پایه Matrix
+# Zanjir - Docker Compose Configuration
+# Self-hosted Matrix server with Dendrite, Element Web, and Caddy
 
 version: '3.8'
 

@@ -1,9 +1,5 @@
-# زنجیر⛓️ - Caddy Reverse Proxy Configuration
-# Automatic HTTPS with Let's Encrypt (for domains)
-# HTTP mode for IP addresses
-
-# Check if DOMAIN looks like an IP address
-# If IP, use HTTP only; if domain, use HTTPS
+# Zanjir - Caddy Reverse Proxy Configuration (Domain Mode)
+# Automatic HTTPS with Let's Encrypt
 
 {$DOMAIN} {
     # Encode responses

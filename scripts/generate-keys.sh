@@ -1,6 +1,6 @@
 #!/bin/bash
-# زنجیر⛓️ - اسکریپت تولید کلید Matrix
-# این اسکریپت کلید امضای Dendrite را تولید می‌کند
+# Zanjir - Matrix Signing Key Generator
+# Generates the Dendrite Matrix signing key using Docker
 
 set -e
 
@@ -8,22 +8,22 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 KEY_FILE="$PROJECT_DIR/dendrite/matrix_key.pem"
 
-echo "🔐 تولید کلید امضای Matrix..."
+echo "[*] Generating Matrix signing key..."
 
 # Check if key already exists
 if [ -f "$KEY_FILE" ]; then
-    echo "⚠️  کلید قبلاً وجود دارد: $KEY_FILE"
-    read -p "آیا می‌خواهید کلید جدید تولید کنید؟ (y/N): " confirm
+    echo "[!] Key already exists: $KEY_FILE"
+    read -p "Do you want to generate a new key? (y/N): " confirm
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
-        echo "❌ لغو شد."
+        echo "[-] Cancelled."
         exit 0
     fi
-    echo "🗑️  حذف کلید قدیمی..."
+    echo "[*] Removing old key..."
     rm -f "$KEY_FILE"
 fi
 
 # Generate key using Docker
-echo "⏳ در حال تولید کلید با Dendrite..."
+echo "[*] Generating key with Dendrite..."
 
 docker run --rm \
     -v "$PROJECT_DIR/dendrite:/etc/dendrite" \
@@ -33,10 +33,11 @@ docker run --rm \
 
 # Verify key was created
 if [ -f "$KEY_FILE" ]; then
-    echo "✅ کلید با موفقیت تولید شد: $KEY_FILE"
+    echo "[+] Key generated successfully: $KEY_FILE"
     chmod 600 "$KEY_FILE"
-    echo "🔒 مجوزهای فایل تنظیم شد."
+    echo "[+] File permissions set."
 else
-    echo "❌ خطا در تولید کلید!"
+    echo "[-] Error generating key!"
     exit 1
 fi
+
