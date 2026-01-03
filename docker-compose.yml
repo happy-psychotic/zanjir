@@ -93,6 +93,7 @@ services:
         cp /config/config.json /srv/element/config.json
         cp /config/welcome.html /srv/element/welcome.html
         cp /config/logo.webp /srv/element/logo.webp
+        cp /config/custom.css /srv/element/custom.css
         mkdir -p /srv/element/mobile_guide
         cp /config/mobile_guide.html /srv/element/mobile_guide/index.html
         echo "Element Web files copied successfully"
@@ -102,6 +103,7 @@ services:
       - ./config/welcome.html:/config/welcome.html:ro
       - ./config/logo.webp:/config/logo.webp:ro
       - ./config/mobile_guide.html:/config/mobile_guide.html:ro
+      - ./config/custom.css:/config/custom.css:ro
     networks:
       - zanjir-network
 

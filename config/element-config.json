@@ -47,7 +47,8 @@
         "enableWidgetScreenshots": false,
         "webRtcAllowPeerToPeer": false,
         "MessageComposerInput.showStickersButton": true,
-        "MessageComposerInput.showPollsButton": false
+        "MessageComposerInput.showPollsButton": false,
+        "customCssUrl": "/custom.css"
     },
     "branding": {
         "welcome_background_url": null,
