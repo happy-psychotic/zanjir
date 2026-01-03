@@ -13,6 +13,7 @@
 </div>
 
 ---
+[![zanjir-screens-copy.webp](https://i.postimg.cc/yYjVzZzN/zanjir-screens-copy.webp)](https://postimg.cc/9r43dz03)
 
 ## معرفی
 
