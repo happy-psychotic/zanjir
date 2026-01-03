@@ -47,8 +47,7 @@
         "enableWidgetScreenshots": false,
         "webRtcAllowPeerToPeer": false,
         "MessageComposerInput.showStickersButton": true,
-        "MessageComposerInput.showPollsButton": false,
-        "customCssUrl": "/custom.css"
+        "MessageComposerInput.showPollsButton": false
     },
     "branding": {
         "welcome_background_url": null,
@@ -59,6 +58,10 @@
                 "url": ""
             }
         ]
+    },
+    "custom_themes": [],
+    "sso_redirect_options": {
+        "immediate": false
     },
     "embedded_pages": {
         "welcome_url": "/welcome.html"
