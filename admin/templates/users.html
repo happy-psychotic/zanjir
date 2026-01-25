@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2 style="margin-bottom: 30px; color: #667eea;">👥 مدیریت کاربران</h2>
+
+    {% if users %}
+    <table>
+        <thead>
+            <tr>
+                <th>شناسه کاربر</th>
+                <th>نام نمایشی</th>
+                <th>وضعیت</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.user_id }}</td>
+                <td>{{ user.display_name or 'بدون نام' }}</td>
+                <td>
+                    {% if user.active %}
+                    <span style="color: #28a745;">●</span> فعال
+                    {% else %}
+                    <span style="color: #dc3545;">●</span> غیرفعال
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="POST" action="{{ url_for('disable_user', user_id=user.user_id) }}"
+                        style="display: inline;">
+                        <button type="submit" class="btn btn-warning"
+                            style="padding: 5px 10px; font-size: 12px;">غیرفعال</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('delete_user', user_id=user.user_id) }}"
+                        style="display: inline;" onsubmit="return confirm('آیا مطمئن هستید؟');">
+                        <button type="submit" class="btn btn-danger"
+                            style="padding: 5px 10px; font-size: 12px;">حذف</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #6c757d; padding: 40px;">هیچ کاربری یافت نشد</p>
+    {% endif %}
+</div>
+{% endblock %}

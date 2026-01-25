@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 400px; margin-top: 100px;">
+    <div class="card">
+        <h2 style="text-align: center; margin-bottom: 30px; color: #667eea;">ورود به پنل ادمین</h2>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">نام کاربری:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">رمز عبور:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">ورود</button>
+        </form>
+
+        <p style="margin-top: 20px; text-align: center; color: #6c757d; font-size: 12px;">
+            فقط کاربران ادمین می‌توانند وارد شوند
+        </p>
+    </div>
+</div>
+{% endblock %}

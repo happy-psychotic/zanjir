@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2 style="margin-bottom: 30px; color: #667eea;">📊 داشبورد</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+        <div
+            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 15px; color: white;">
+            <h3 style="font-size: 36px; margin-bottom: 10px;">{{ stats.total_users }}</h3>
+            <p>کل کاربران</p>
+        </div>
+
+        <div
+            style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 15px; color: white;">
+            <h3 style="font-size: 36px; margin-bottom: 10px;">{{ stats.active_users }}</h3>
+            <p>کاربران فعال</p>
+        </div>
+
+        <div
+            style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 30px; border-radius: 15px; color: white;">
+            <h3 style="font-size: 36px; margin-bottom: 10px;">{{ stats.total_rooms }}</h3>
+            <p>اتاق‌ها</p>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px;">
+        <h3 style="margin-bottom: 20px;">دسترسی سریع</h3>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <a href="{{ url_for('users') }}" class="btn btn-primary">مدیریت کاربران</a>
+            <a href="{{ url_for('logs') }}" class="btn btn-warning">مشاهده لاگ‌ها</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
