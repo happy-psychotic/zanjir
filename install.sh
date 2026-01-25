@@ -321,6 +321,7 @@ generate_secrets() {
     log_info "Generating security keys..."
     POSTGRES_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=')
     REGISTRATION_SECRET=$(openssl rand -base64 32 | tr -d '/+=')
+    TURN_SECRET=$(openssl rand -base64 32 | tr -d '/+=')
     log_success "Keys generated."
 }
 

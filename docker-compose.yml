@@ -47,6 +47,32 @@ services:
       - zanjir-network
     command: --config /etc/dendrite/dendrite.yaml
 
+  # Coturn TURN Server for Voice/Video Calls
+  coturn:
+    image: coturn/coturn:latest
+    container_name: zanjir-coturn
+    restart: unless-stopped
+    ports:
+      - "3478:3478/udp"
+      - "5349:5349/udp"
+    environment:
+      TURN_STATIC_SECRET: ${TURN_SECRET}
+      TURN_REALM: ${DOMAIN}
+    command:
+      - "-n"
+      - "--log-file=stdout"
+      - "--listening-port=3478"
+      - "--tls-listening-port=5349"
+      - "--min-port=49152"
+      - "--max-port=65535"
+      - "--realm=${DOMAIN}"
+      - "--use-auth-secret"
+      - "--static-auth-secret=${TURN_SECRET}"
+      - "--no-tls"
+      - "--no-dtls"
+    networks:
+      - zanjir-network
+
   # Element Web Client
   element:
     image: ${ELEMENT_IMAGE:-vectorim/element-web:v1.11.50}
