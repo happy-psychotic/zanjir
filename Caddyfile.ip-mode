@@ -2,8 +2,7 @@
 # Self-signed HTTPS for IP addresses
 # WARNING: Browser will show security warning - click "Advanced" > "Proceed"
 
-https:// {
-    bind 0.0.0.0
+0.0.0.0:443 {
     tls internal
 
     encode gzip zstd
@@ -81,7 +80,6 @@ https:// {
 }
 
 # Redirect HTTP to HTTPS
-http:// {
-    bind 0.0.0.0
+0.0.0.0:80 {
     redir https://{host}{uri} permanent
 }
