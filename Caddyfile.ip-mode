@@ -2,14 +2,8 @@
 # Self-signed HTTPS for IP addresses
 # WARNING: Browser will show security warning - click "Advanced" > "Proceed"
 
-{
-    auto_https off
-}
-
 :{$HTTPS_PORT:-443} {
-    tls internal {
-        on_demand
-    }
+    tls internal
 
     encode gzip zstd
 
