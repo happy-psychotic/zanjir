@@ -1,8 +1,6 @@
 # Zanjir - Docker Compose Configuration
 # Self-hosted Matrix server with Conduit, Element Web, and Caddy
 
-version: '3.8'
-
 services:
   # Conduit Matrix Homeserver (Rust-based)
   conduit:
