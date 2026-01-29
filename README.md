@@ -1,10 +1,10 @@
-# زنجیر⛓️ - Zanjir Matrix Server
+# Zanjir - Matrix Server
 
-**Self-hosted, secure, decentralized messaging server powered by Matrix protocol**
+**Self-hosted, fast, lightweight Matrix server powered by Conduit (Rust)**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
-[![Matrix](https://img.shields.io/badge/matrix-dendrite-green.svg)](https://matrix.org/)
+[![Matrix](https://img.shields.io/badge/matrix-conduit-green.svg)](https://conduit.rs/)
 
 ---
 
@@ -279,7 +279,7 @@ https://your-domain.com:8443
 #### Registration not working
 
 **Check:**
-1. Verify `dendrite.yaml`: `registration_disabled: false`
+1. Verify registration is enabled in docker-compose.yml: `CONDUIT_ALLOW_REGISTRATION: "true"`
 2. Check `element-config.json`: `"UIFeature.registration": true`
 3. Restart containers:
    ```bash
@@ -294,7 +294,7 @@ https://your-domain.com:8443
    docker ps | grep coturn
    ```
 2. Verify firewall allows UDP 3478, 5349
-3. Check TURN secret in `.env` matches `dendrite.yaml`
+3. Check TURN secret in `.env` matches `TURN_SECRET` environment variable
 
 #### Admin panel login fails
 
@@ -344,7 +344,7 @@ A: Admin actions logged in SQLite (`admin/audit_log.db`).
 ### Performance
 
 **Q: How many users can it handle?**  
-A: Dendrite is lightweight. A 2GB VPS can handle ~100-500 users.
+A: Conduit is extremely lightweight. A 1GB VPS can handle ~100-500 users with ease. Conduit uses ~50MB RAM vs Dendrite's 200-500MB.
 
 **Q: What about backups?**  
 A: Backup Docker volumes:
@@ -377,7 +377,7 @@ MIT License - see [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - [Matrix.org](https://matrix.org/) - Open protocol
-- [Dendrite](https://github.com/matrix-org/dendrite) - Lightweight homeserver
+- [Conduit](https://conduit.rs/) - Fast, lightweight Rust homeserver
 - [Element](https://element.io/) - Web client
 - [Coturn](https://github.com/coturn/coturn) - TURN server
 - [Caddy](https://caddyserver.com/) - Reverse proxy

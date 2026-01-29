@@ -1,55 +1,36 @@
 # Zanjir - Docker Compose Configuration
-# Self-hosted Matrix server with Dendrite, Element Web, and Caddy
+# Self-hosted Matrix server with Conduit, Element Web, and Caddy
 
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: ${POSTGRES_IMAGE:-postgres:15-alpine}
-    container_name: zanjir-postgres
+  # Conduit Matrix Homeserver (Rust-based)
+  conduit:
+    image: ${CONDUIT_IMAGE:-docker.io/matrixconduit/matrix-conduit:latest}
+    container_name: zanjir-conduit
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-dendrite}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-dendrite}
+      CONDUIT_SERVER_NAME: ${DOMAIN}
+      CONDUIT_DATABASE_BACKEND: rocksdb
+      CONDUIT_DATABASE_PATH: /var/lib/matrix-conduit/
+      CONDUIT_PORT: 6167
+      CONDUIT_MAX_REQUEST_SIZE: 20000000
+      CONDUIT_ALLOW_REGISTRATION: "true"
+      CONDUIT_ALLOW_FEDERATION: "false"
+      CONDUIT_ALLOW_ENCRYPTION: "true"
+      CONDUIT_ALLOW_GUEST_ACCESS: "false"
+      CONDUIT_TRUSTED_SERVERS: '["matrix.org"]'
+      CONDUIT_ADDRESS: 0.0.0.0
+      CONDUIT_LOG: "info,rocket=off,_=off,sled=off"
+      CONDUIT_CONFIG: ""
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - conduit-data:/var/lib/matrix-conduit/
     networks:
       - zanjir-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dendrite}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Dendrite Matrix Homeserver
-  dendrite:
-    image: ${DENDRITE_IMAGE:-matrixdotorg/dendrite-monolith:latest}
-    container_name: zanjir-dendrite
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      DOMAIN: ${DOMAIN}
-      POSTGRES_USER: ${POSTGRES_USER:-dendrite}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-dendrite}
-      REGISTRATION_SHARED_SECRET: ${REGISTRATION_SHARED_SECRET}
-    volumes:
-      - ./dendrite/dendrite.yaml:/etc/dendrite/dendrite.yaml:ro
-      - ./dendrite/matrix_key.pem:/etc/dendrite/matrix_key.pem:ro
-      - dendrite-media:/var/dendrite/media
-      - dendrite-jetstream:/var/dendrite/jetstream
-      - dendrite-search:/var/dendrite/searchindex
-    networks:
-      - zanjir-network
-    command: --config /etc/dendrite/dendrite.yaml
 
   # Coturn TURN Server for Voice/Video Calls
   coturn:
-    image: coturn/coturn:latest
+    image: ${COTURN_IMAGE:-coturn/coturn:latest}
     container_name: zanjir-coturn
     restart: unless-stopped
     ports:
@@ -72,13 +53,14 @@ services:
       - "--no-dtls"
     networks:
       - zanjir-network
+
   # Admin Panel
   admin:
     build: ./admin
     container_name: zanjir-admin
     restart: unless-stopped
     environment:
-      DENDRITE_URL: http://dendrite:8008
+      CONDUIT_URL: http://conduit:6167
       REGISTRATION_SHARED_SECRET: ${REGISTRATION_SHARED_SECRET}
       DOMAIN: ${DOMAIN}
     volumes:
@@ -87,7 +69,7 @@ services:
     networks:
       - zanjir-network
     depends_on:
-      - dendrite
+      - conduit
 
   # Element Web Client
   element:
@@ -122,7 +104,7 @@ services:
     networks:
       - zanjir-network
     depends_on:
-      - dendrite
+      - conduit
       - element
 
   # Utility container to copy Element Web files
@@ -137,6 +119,7 @@ services:
         cp /config/config.json /srv/element/config.json
         cp /config/welcome.html /srv/element/welcome.html
         cp /config/logo.webp /srv/element/logo.webp
+        cp /config/custom.css /srv/element/custom.css
         mkdir -p /srv/element/mobile_guide
         cp /config/mobile_guide.html /srv/element/mobile_guide/index.html
         echo "Element Web files copied successfully"
@@ -145,6 +128,7 @@ services:
       - ./config/element-config.json:/config/config.json:ro
       - ./config/welcome.html:/config/welcome.html:ro
       - ./config/logo.webp:/config/logo.webp:ro
+      - ./config/custom.css:/config/custom.css:ro
       - ./config/mobile_guide.html:/config/mobile_guide.html:ro
     networks:
       - zanjir-network
@@ -154,14 +138,8 @@ networks:
     driver: bridge
 
 volumes:
-  postgres-data:
-    name: zanjir-postgres-data
-  dendrite-media:
-    name: zanjir-dendrite-media
-  dendrite-jetstream:
-    name: zanjir-dendrite-jetstream
-  dendrite-search:
-    name: zanjir-dendrite-search
+  conduit-data:
+    name: zanjir-conduit-data
   caddy-data:
     name: zanjir-caddy-data
   caddy-config:
@@ -170,4 +148,3 @@ volumes:
     name: zanjir-element-web
   admin-data:
     name: zanjir-admin-data
-

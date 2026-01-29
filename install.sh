@@ -340,7 +340,6 @@ install_docker_compose() {
 
 generate_secrets() {
     log_info "Generating security keys..."
-    POSTGRES_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=')
     REGISTRATION_SECRET=$(openssl rand -base64 32 | tr -d '/+=')
     TURN_SECRET=$(openssl rand -base64 32 | tr -d '/+=')
     log_success "Keys generated."
@@ -468,15 +467,10 @@ start_services() {
     docker compose run --rm element-copy
     
     log_info "Starting services..."
-    docker compose up -d postgres
-    
-    log_info "Waiting for PostgreSQL to be ready..."
-    sleep 10
-    
-    docker compose up -d dendrite element caddy
+    docker compose up -d
     
     log_info "Waiting for services to start..."
-    sleep 5
+    sleep 10
     
     log_success "Services started!"
 }
@@ -501,12 +495,10 @@ print_success() {
     fi
     
     echo ""
-    echo "To create an admin user:"
+    echo "To create a user, register via Element Web interface at:"
+    echo "  ${PROTOCOL}://${SERVER_ADDRESS}"
     echo ""
-    echo "docker exec -it zanjir-dendrite /usr/bin/create-account \\"
-    echo "    --config /etc/dendrite/dendrite.yaml \\"
-    echo "    --username YOUR_USERNAME \\"
-    echo "    --admin"
+    echo "Or use the Conduit admin API."
     echo ""
     echo "Registration secret (for API): ${REGISTRATION_SECRET}"
     echo ""
@@ -526,8 +518,6 @@ generate_secrets
 create_env_file
 setup_caddyfile
 update_element_config
-update_dendrite_config
-generate_matrix_key
 start_services
 check_services
 print_success

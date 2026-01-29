@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Zanjir Admin Panel
-Simple web-based admin interface for Dendrite Matrix server
+Simple web-based admin interface for Conduit Matrix server
 """
 
 import os
@@ -18,7 +18,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv('REGISTRATION_SHARED_SECRET', 'change-me-in-production')
 
 # Configuration
-DENDRITE_URL = os.getenv('DENDRITE_URL', 'http://dendrite:8008')
+CONDUIT_URL = os.getenv('CONDUIT_URL', 'http://conduit:6167')
 ADMIN_SECRET = os.getenv('REGISTRATION_SHARED_SECRET')
 DOMAIN = os.getenv('DOMAIN', 'localhost')
 
@@ -82,10 +82,10 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Authenticate via Dendrite
+        # Authenticate via Conduit
         try:
             response = requests.post(
-                f'{DENDRITE_URL}/_matrix/client/v3/login',
+                f'{CONDUIT_URL}/_matrix/client/v3/login',
                 json={
                     'type': 'm.login.password',
                     'identifier': {
@@ -119,9 +119,9 @@ def login():
     return render_template('login.html')
 
 def check_if_admin(user_id):
-    """Check if user has admin privileges via Dendrite API"""
+    """Check if user has admin privileges via Conduit API"""
     # This is a placeholder - implement actual admin check
-    # You might need to query Dendrite's database or use admin API
+    # You might need to query Conduit's database or use admin API
     return True  # For now, allow anyone who can login
 
 @app.route('/logout')
@@ -143,7 +143,7 @@ def dashboard():
     }
     
     try:
-        # These would need actual Dendrite admin API calls
+        # These would need actual Conduit admin API calls
         # For now, return placeholder data
         stats = get_server_stats()
     except Exception as e:
@@ -166,7 +166,7 @@ def users():
 @login_required
 def disable_user(user_id):
     try:
-        # Call Dendrite admin API to disable user
+        # Call Conduit admin API to disable user
         # This is a placeholder - implement actual API call
         log_audit('DISABLE_USER', target_user=user_id, details='User account disabled')
         flash(f'User {user_id} disabled successfully', 'success')
@@ -179,7 +179,7 @@ def disable_user(user_id):
 @login_required
 def delete_user(user_id):
     try:
-        # Call Dendrite admin API to delete user
+        # Call Conduit admin API to delete user
         # This is a placeholder - implement actual API call
         log_audit('DELETE_USER', target_user=user_id, details='User account deleted')
         flash(f'User {user_id} deleted successfully', 'success')
@@ -201,7 +201,7 @@ def logs():
 
 # Helper functions (placeholders)
 def get_server_stats():
-    """Get server statistics from Dendrite"""
+    """Get server statistics from Conduit"""
     # Implement actual API calls here
     return {
         'total_users': 0,
@@ -210,7 +210,7 @@ def get_server_stats():
     }
 
 def get_all_users():
-    """Get list of all users from Dendrite"""
+    """Get list of all users from Conduit"""
     # Implement actual API calls here
     return []
 

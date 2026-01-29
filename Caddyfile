@@ -19,12 +19,12 @@
 
     # Matrix Client-Server API
     handle /_matrix/* {
-        reverse_proxy dendrite:8008
+        reverse_proxy conduit:6167
     }
 
     # Matrix Federation API
     handle /_dendrite/* {
-        reverse_proxy dendrite:8008
+        reverse_proxy conduit:6167
     }
 
     # Admin Panel
