@@ -1,12 +1,9 @@
 # Zanjir - Caddy Configuration for IP-only mode
-# Self-signed HTTPS for IP addresses  
+# Self-signed HTTPS for IP addresses
 # WARNING: Browser will show security warning - click "Advanced" > "Proceed"
 
-{
-    auto_https disable_redirects
-}
-
-:{$HTTPS_PORT:-443} {
+https:// {
+    bind 0.0.0.0
     tls internal
 
     encode gzip zstd
@@ -84,6 +81,7 @@
 }
 
 # Redirect HTTP to HTTPS
-:{$HTTP_PORT:-80} {
-    redir https://{host}:{$HTTPS_PORT:-443}{uri} permanent
+http:// {
+    bind 0.0.0.0
+    redir https://{host}{uri} permanent
 }
