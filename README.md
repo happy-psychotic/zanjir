@@ -16,12 +16,6 @@
 
 **📖 [Persian Version (نسخه فارسی)](README-FA.md)**
 
----
-
-> [!IMPORTANT]
-> **Upgrading from Dendrite?** If you previously installed Zanjir with Dendrite, you need to migrate to the new Conduit-based version. **This will require a fresh installation and all data will be lost.** See the [Migration Guide](MIGRATE.md) for step-by-step instructions.
-
----
 ## 📋 Table of Contents
 
 - [Features](#features)
@@ -127,6 +121,7 @@ Current note:
 - the current stack is Conduit-based and open registration is enabled by default
 - federated installs now enable Matrix federation through `FEDERATION_ENABLED=true`
 - private/internal CA mode mounts operator-provided PEM files from `./certs`
+- old migration-only guides were removed because this repo now documents the live install path directly
 
 ---
 
@@ -314,6 +309,8 @@ This will:
 - Use port 8443 for HTTPS
 - Use port 8080 for HTTP (auto-calculated)
 - Update all configurations
+
+If you are placing Zanjir behind another reverse proxy on the host, keep the container listener ports at `80/443` and set `HOST_HTTP_PORT` and `HOST_HTTPS_PORT` separately for the published ports.
 
 ### Accessing with Custom Port
 

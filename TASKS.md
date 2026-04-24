@@ -34,6 +34,7 @@ Status markers:
 - `[done]` Identify the main config assumptions that break in an internal CA deployment and replace them with explicit PEM-file handling in Caddy and the installer.
 - `[todo]` Verify whether public CA issuance is actually possible for the intended internal domains.
 - `[todo]` Define the private/internal CA distribution workflow if public CA is not workable.
+- `[done]` Remove migration-only markdown guides that no longer add operational value.
 
 ## Medium-Term Tasks
 

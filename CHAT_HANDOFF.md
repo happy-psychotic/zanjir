@@ -20,6 +20,8 @@ Zanjir is currently a Matrix deployment distribution built around Conduit, Eleme
 - private/internal CA mode now copies operator-provided PEM files into `./certs` and activates `Caddyfile.private-ca`
 - Caddy `.well-known` responses and Element config now follow installer-generated `PUBLIC_BASE_URL` and `WELL_KNOWN_SERVER` values
 - README-FA and migration guides were cleaned up to remove stale Dendrite/PostgreSQL operational instructions
+- migration-only Markdown guides were removed after confirming they duplicated the live install path and were no longer useful as durable docs
+- the compose stack now supports separate host-published and container listener ports, which was required to deploy behind the existing host nginx on `arsalan`
 
 ## Read First Next Session
 
