@@ -45,11 +45,11 @@
 | 🔐 **Open Registration** | Users can self-register via web interface |
 | 👑 **Admin Panel** | Web-based admin dashboard with audit logging |
 | 📞 **Voice/Video Calls** | TURN server for reliable NAT traversal |
-| 🔧 **Custom Ports** | Configurable HTTPS/HTTP ports (no 443 conflict) |
+| 🔧 **Deployment Profiles** | Isolated mode or internal-domain federation mode |
 | 📱 **Element Web** | Modern, responsive Matrix client |
 | 🇮🇷 **Persian UI** | Fully translated interface |
 | 🐳 **Docker Powered** | One-command installation |
-| 🔒 **Auto HTTPS** | Let's Encrypt or self-signed certificates |
+| 🔒 **Certificate Modes** | Public CA, private/internal CA, or isolated IP self-signed mode |
 
 ---
 
@@ -58,7 +58,7 @@
 **Requirements:**
 - Ubuntu 20.04+ or Debian 11+
 - 2GB RAM minimum
-- Domain name (or IP address)
+- Internal domain name for federation mode, or IP address for isolated/test mode
 - Ports: 80, 443 (or custom), 3478, 5349 (UDP)
 
 **One-line installation:**
@@ -92,31 +92,41 @@ sudo bash install.sh
 
 **Installation prompts:**
 
-1. **Server address** - Your domain or IP (e.g., `matrix.example.com` or `185.123.45.67`)
-2. **Admin email** - For SSL certificates (domain mode only)
-3. **HTTPS port** - Default: 443 (press Enter), or custom (e.g., 8443)
+1. **Server address** - Internal domain or IP (for example `matrix-a.example.internal` or `192.168.1.50`)
+2. **Deployment mode** - `isolated` or `federated`
+3. **Certificate mode** - `public` or `private` for domain installs
+4. **Admin email** - Only when public CA mode is selected
+5. **TLS certificate/key paths** - Only when private CA mode is selected
+6. **HTTPS port** - Default: 443 (press Enter), or custom (for example `8443`)
 
-### Step 3: Create Admin User
+### Supported Modes
 
-After installation completes:
+- `isolated + IP`: Caddy internal CA, federation disabled, intended for isolated or test deployments only
+- `isolated + domain + public CA`: single-server deployment with publicly trusted TLS
+- `isolated + domain + private CA`: single-server deployment with operator-provided PEM files
+- `federated + domain + public CA`: preferred when public validation actually works for the internal deployment
+- `federated + domain + private CA`: real fallback for internal networks that cannot use a public CA
 
-```bash
-docker exec -it zanjir-dendrite /usr/bin/create-account \
-    --config /etc/dendrite/dendrite.yaml \
-    --username YOUR_USERNAME \
-    --admin
-```
+Not supported for full federation:
 
-**Example:**
+- plain HTTP between homeservers
+- IP-only mode as a normal federation path
 
-```bash
-docker exec -it zanjir-dendrite /usr/bin/create-account \
-    --config /etc/dendrite/dendrite.yaml \
-    --username admin \
-    --admin
-```
+### Step 3: Create Your First Account
 
-You'll be prompted to set a password.
+After installation completes, open the web client and register normally:
+
+1. Visit `https://your-domain.com`
+2. Click `Create account`
+3. Choose username and password
+4. Log in through Element Web
+
+Current note:
+
+- the repository no longer uses the old Dendrite `create-account` command path
+- the current stack is Conduit-based and open registration is enabled by default
+- federated installs now enable Matrix federation through `FEDERATION_ENABLED=true`
+- private/internal CA mode mounts operator-provided PEM files from `./certs`
 
 ---
 
@@ -210,7 +220,12 @@ Main Menu:
 
 Visit: `https://your-domain.com/admin`
 
-Login with your admin account credentials.
+Login with your account credentials.
+
+Current limitation:
+
+- the admin panel is still a thin convenience UI with placeholder-grade authorization logic in `admin/app.py`
+- do not treat it as the authoritative security boundary for operator actions yet
 
 ### Features
 
@@ -356,17 +371,27 @@ https://your-domain.com:8443
 #### Admin panel login fails
 
 **Solutions:**
-1. Verify user is admin:
+1. Verify the container is healthy and the homeserver is reachable:
    ```bash
-   docker exec -it zanjir-dendrite /usr/bin/create-account \
-       --config /etc/dendrite/dendrite.yaml \
-       --username YOUR_USERNAME \
-       --admin
+   zanjir status
    ```
 2. Check admin container logs:
    ```bash
    docker logs zanjir-admin
    ```
+3. Treat the current admin panel as experimental; direct homeserver or compose-level checks are more trustworthy today.
+
+#### Federation fails between servers
+
+**Check:**
+1. Both servers were installed in `federated` mode
+2. Both servers use stable internal domains, not raw IPs
+3. Both peers trust the same private/internal CA, or both have publicly trusted certificates
+4. `/.well-known/matrix/server` returns the expected `m.server` value:
+   ```bash
+   curl -k https://your-domain/.well-known/matrix/server
+   ```
+5. `docker compose logs caddy conduit` shows successful HTTPS requests instead of certificate failures
 
 #### Port already in use
 
@@ -379,18 +404,18 @@ https://your-domain.com:8443
 ### General
 
 **Q: Can I use an IP address instead of domain?**  
-A: Yes! The installer detects IP mode and uses self-signed certificates.
+A: Yes, but only for isolated or test deployments. IP mode uses Caddy's internal CA and is not a supported full-federation profile.
 
 **Q: Is federation enabled?**  
-A: No, Zanjir is designed for isolated single-server deployment.
+A: Only when you choose `federated` mode during installation. Isolated mode keeps federation disabled.
 
 **Q: Can users video call externally?**  
-A: Only within your Zanjir server (federation disabled).
+A: Calls work for users who can reach the deployment and TURN service. Cross-server behavior depends on correct federation and certificate setup on every participating server.
 
 ### Security
 
 **Q: How are passwords stored?**  
-A: Bcrypt hashed in PostgreSQL.
+A: Password verification is handled by the homeserver. This repository no longer uses the old PostgreSQL-based Dendrite runtime path.
 
 **Q: Is end-to-end encryption supported?**  
 A: Yes! Element/Matrix supports E2EE by default.
@@ -404,13 +429,7 @@ A: Admin actions logged in SQLite (`admin/audit_log.db`).
 A: Conduit is extremely lightweight. A 1GB VPS can handle ~100-500 users with ease. Conduit uses ~50MB RAM vs Dendrite's 200-500MB.
 
 **Q: What about backups?**  
-A: Backup Docker volumes:
-```bash
-docker run --rm \
-  -v zanjir-postgres-data:/data \
-  -v $(pwd):/backup \
-  ubuntu tar czf /backup/postgres-backup.tar.gz /data
-```
+A: Back up the active Docker volumes, especially `zanjir-conduit-data`, `zanjir-caddy-data`, and `zanjir-admin-data`. The `zanjir backup` command is the current project helper for this.
 
 ---
 

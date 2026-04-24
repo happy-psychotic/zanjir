@@ -14,10 +14,10 @@ services:
       CONDUIT_PORT: 6167
       CONDUIT_MAX_REQUEST_SIZE: 20000000
       CONDUIT_ALLOW_REGISTRATION: "true"
-      CONDUIT_ALLOW_FEDERATION: "false"
+      CONDUIT_ALLOW_FEDERATION: "${FEDERATION_ENABLED:-false}"
       CONDUIT_ALLOW_ENCRYPTION: "true"
       CONDUIT_ALLOW_GUEST_ACCESS: "false"
-      CONDUIT_TRUSTED_SERVERS: '["matrix.org"]'
+      CONDUIT_TRUSTED_SERVERS: '[]'
       CONDUIT_ADDRESS: 0.0.0.0
       CONDUIT_LOG: "info,rocket=off,_=off,sled=off"
       CONDUIT_CONFIG: ""
@@ -91,10 +91,16 @@ services:
     environment:
       DOMAIN: ${DOMAIN}
       SERVER_ADDRESS: ${SERVER_ADDRESS:-${DOMAIN}}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://${DOMAIN}}
+      WELL_KNOWN_SERVER: ${WELL_KNOWN_SERVER:-${DOMAIN}}
       HTTPS_PORT: ${HTTPS_PORT:-443}
       HTTP_PORT: ${HTTP_PORT:-80}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL:-}
+      TLS_CERT_FILE: ${TLS_CERT_FILE:-/certs/site.crt}
+      TLS_KEY_FILE: ${TLS_KEY_FILE:-/certs/site.key}
     volumes:
       - ./Caddyfile.active:/etc/caddy/Caddyfile:ro
+      - ./certs:/certs:ro
       - caddy-data:/data
       - caddy-config:/config
       # Mount Element Web files for serving
