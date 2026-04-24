@@ -62,6 +62,7 @@ services:
       CONDUIT_URL: http://conduit:6167
       REGISTRATION_SHARED_SECRET: ${REGISTRATION_SHARED_SECRET}
       DOMAIN: ${DOMAIN}
+      ADMIN_USERS: ${ADMIN_USERS:-}
     volumes:
       - ./admin:/app
       - admin-data:/app/data

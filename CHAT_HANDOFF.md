@@ -4,6 +4,8 @@
 
 Zanjir is currently a Matrix deployment distribution built around Conduit, Element Web, Caddy, coturn, and a small custom Flask admin panel. It is not a new protocol or a full federation platform yet.
 
+Admin panel access is now intended to be constrained by an explicit `ADMIN_USERS` allowlist in `.env`. Open Matrix self-registration remains enabled for normal users, but `/admin` should only admit exact allowlisted Matrix IDs.
+
 ## What Was Done In This Session
 
 - cloned and inspected the real repository
@@ -22,6 +24,7 @@ Zanjir is currently a Matrix deployment distribution built around Conduit, Eleme
 - README-FA and migration guides were cleaned up to remove stale Dendrite/PostgreSQL operational instructions
 - migration-only Markdown guides were removed after confirming they duplicated the live install path and were no longer useful as durable docs
 - the compose stack now supports separate host-published and container listener ports, which was required to deploy behind the existing host nginx on `arsalan`
+- admin-panel authorization was tightened from placeholder logic to an explicit `ADMIN_USERS` Matrix ID allowlist
 
 ## Read First Next Session
 
@@ -66,7 +69,7 @@ Progress on that task:
 - Long-term homeserver choice is not yet reassessed beyond repo inspection.
 - Public CA viability for the intended internal domains is still not verified.
 - Private/internal CA distribution workflow is only implemented as local PEM-file installation; shared trust-root distribution and peer onboarding docs still need a fuller runbook.
-- Admin panel trust model is weak and should not be treated as authoritative yet.
+- Admin panel scope is still thin, but the login boundary should now be enforced through `ADMIN_USERS` rather than placeholder pattern checks.
 
 ## Strict Reminder
 

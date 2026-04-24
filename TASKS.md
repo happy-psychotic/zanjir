@@ -14,7 +14,7 @@ Status markers:
 | P0 | [done] | Reconcile README and migration docs with actual Conduit runtime | TBD | Phase 0 docs | README, README-FA, MIGRATE, and MIGRATE-FA now reflect the Conduit-based runtime and current install modes |
 | P0 | [done] | Decide and document supported domestic-network naming/trust profiles | TBD | Phase 0 docs | Selected: internal DNS + domains, public CA preferred, private/internal CA fallback |
 | P0 | [doing] | Define exact federation-enable change set for the publishable full product | TBD | naming/trust profile | Installer, proxy templates, and Element config now support deployment profiles; validation and runbooks still remain |
-| P0 | [todo] | Review and constrain admin panel trust model | TBD | repo assessment | Current admin authz is placeholder-level and unsafe to overtrust |
+| P0 | [done] | Review and constrain admin panel trust model | Codex | strict `ADMIN_USERS` allowlist | Replaced placeholder admin authz with explicit Matrix ID allowlist for `/admin` |
 | P1 | [todo] | Document backup, restore, and upgrade runbooks | TBD | Phase 1 | Must exist before federation rollout |
 | P1 | [done] | Remove or quarantine dead Dendrite installer paths and unused config | TBD | README reconciliation | Dead Dendrite installer functions and helper files removed in first implementation pass |
 | P1 | [done] | Decide how to remove `matrix.org` assumptions from isolated/internal deployments | TBD | naming/trust profile | Default compose trusted-server assumption changed from `matrix.org` to empty list |
@@ -41,7 +41,7 @@ Status markers:
 - `[done]` Add installer support for choosing naming/trust profile.
 - `[todo]` Add documented preflight checks for federation readiness.
 - `[todo]` Build a two-server test harness or repeatable lab instructions.
-- `[todo]` Reduce admin panel scope or implement real authorization checks.
+- `[done]` Implement explicit admin authorization checks with an `ADMIN_USERS` allowlist.
 - `[todo]` Document room alias, invite, and peer onboarding procedures for operators.
 
 ## Task Notes By Theme
