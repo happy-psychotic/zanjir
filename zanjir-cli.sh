@@ -75,17 +75,8 @@ show_status() {
     # Show URL if .env exists
     if [ -f .env ]; then
         source .env
-        
-        # Construct full URL with port if needed
-        local full_url="${PROTOCOL}://${DOMAIN}"
-        if [ "$IP_MODE" = "true" ]; then
-            # In IP mode, always show the port
-            full_url="${full_url}:${HTTPS_PORT}"
-        elif [ "${HTTPS_PORT:-443}" != "443" ]; then
-            # In domain mode, only show port if not standard 443
-            full_url="${full_url}:${HTTPS_PORT}"
-        fi
-        
+
+        local full_url="${PUBLIC_BASE_URL:-${PROTOCOL}://${DOMAIN}}"
         echo -e "${BOLD}URL:${NC} ${CYAN}${full_url}${NC}"
     fi
 }

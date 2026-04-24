@@ -29,11 +29,10 @@ normalize_line_endings() {
     fi
 
     local files=(
-        "scripts/generate-keys.sh"
         "docker-compose.yml"
         "Caddyfile"
+        "Caddyfile.private-ca"
         "Caddyfile.ip-mode"
-        "dendrite/dendrite.yaml"
         "config/element-config.json"
     )
 
@@ -211,6 +210,73 @@ is_ip_address() {
     [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
 }
 
+ask_deployment_mode() {
+    while true; do
+        echo "Deployment mode:"
+        echo "  1) isolated   - single-server deployment, federation disabled"
+        echo "  2) federated  - internal-domain deployment, federation enabled"
+        read -p "Choose deployment mode [1/2]: " mode_choice
+
+        case "$mode_choice" in
+            1)
+                DEPLOYMENT_MODE="isolated"
+                FEDERATION_ENABLED="false"
+                return
+                ;;
+            2)
+                DEPLOYMENT_MODE="federated"
+                FEDERATION_ENABLED="true"
+                return
+                ;;
+            *)
+                log_error "Choose 1 or 2."
+                ;;
+        esac
+    done
+}
+
+ask_certificate_mode() {
+    while true; do
+        echo ""
+        echo "Certificate mode:"
+        echo "  1) public   - Caddy obtains a publicly trusted certificate"
+        echo "  2) private  - use an operator-provided PEM certificate and key"
+        read -p "Choose certificate mode [1/2]: " cert_choice
+
+        case "$cert_choice" in
+            1)
+                CERT_MODE="public"
+                return
+                ;;
+            2)
+                CERT_MODE="private"
+                return
+                ;;
+            *)
+                log_error "Choose 1 or 2."
+                ;;
+        esac
+    done
+}
+
+ask_private_cert_paths() {
+    while true; do
+        read -r -p "Path to TLS certificate PEM: " PRIVATE_CERT_SOURCE
+        if [ -f "$PRIVATE_CERT_SOURCE" ]; then
+            break
+        fi
+        log_error "Certificate file not found."
+    done
+
+    while true; do
+        read -r -p "Path to TLS private key PEM: " PRIVATE_KEY_SOURCE
+        if [ -f "$PRIVATE_KEY_SOURCE" ]; then
+            break
+        fi
+        log_error "Private key file not found."
+    done
+}
+
 get_user_input() {
     echo ""
     log_info "Configuration questions..."
@@ -229,22 +295,34 @@ get_user_input() {
     if is_ip_address "$SERVER_ADDRESS"; then
         IP_MODE=true
         PROTOCOL="https"
-        log_warning "IP mode detected. Self-signed SSL will be used."
-        log_warning "Browser will show security warning - click Advanced > Proceed."
+        DEPLOYMENT_MODE="isolated"
+        FEDERATION_ENABLED="false"
+        CERT_MODE="internal"
+        log_warning "IP mode detected. This path is isolated/test-only and uses Caddy's internal CA."
+        log_warning "Federation is disabled in IP mode."
     else
         IP_MODE=false
         PROTOCOL="https"
-        log_success "Domain mode. SSL will be obtained from Let's Encrypt."
+        ask_deployment_mode
+        ask_certificate_mode
+        log_success "Domain mode selected."
     fi
-    
-    # Get admin email (only for domain mode)
-    if [ "$IP_MODE" = false ]; then
+
+    # Get admin email only for public CA mode
+    if [ "${CERT_MODE}" = "public" ]; then
         read -p "Admin email (for SSL): " ADMIN_EMAIL
         if [ -z "$ADMIN_EMAIL" ]; then
             ADMIN_EMAIL="admin@${SERVER_ADDRESS}"
         fi
     else
         ADMIN_EMAIL=""
+    fi
+
+    if [ "${CERT_MODE}" = "private" ]; then
+        ask_private_cert_paths
+    else
+        PRIVATE_CERT_SOURCE=""
+        PRIVATE_KEY_SOURCE=""
     fi
     
     # Get custom port (optional)
@@ -265,15 +343,36 @@ get_user_input() {
     if [ "$HTTP_PORT" -lt 1 ]; then
         HTTP_PORT=80
     fi
+
+    PUBLIC_BASE_URL="https://${SERVER_ADDRESS}"
+    if [ "${HTTPS_PORT}" != "443" ]; then
+        PUBLIC_BASE_URL="${PUBLIC_BASE_URL}:${HTTPS_PORT}"
+    fi
+
+    WELL_KNOWN_SERVER="${SERVER_ADDRESS}"
+    if [ "${HTTPS_PORT}" != "443" ]; then
+        WELL_KNOWN_SERVER="${WELL_KNOWN_SERVER}:${HTTPS_PORT}"
+    fi
+
+    TLS_CERT_FILE="/certs/site.crt"
+    TLS_KEY_FILE="/certs/site.key"
     
     echo ""
     log_info "Settings:"
     echo "   Address: ${SERVER_ADDRESS}"
-    echo "   Protocol: ${PROTOCOL}"
+    echo "   Deployment mode: ${DEPLOYMENT_MODE}"
+    echo "   Federation enabled: ${FEDERATION_ENABLED}"
+    echo "   Certificate mode: ${CERT_MODE}"
+    echo "   Public base URL: ${PUBLIC_BASE_URL}"
+    echo "   Well-known server: ${WELL_KNOWN_SERVER}"
     echo "   HTTPS Port: ${HTTPS_PORT}"
     echo "   HTTP Port: ${HTTP_PORT}"
-    if [ "$IP_MODE" = false ]; then
+    if [ "${CERT_MODE}" = "public" ]; then
         echo "   Email: ${ADMIN_EMAIL}"
+    fi
+    if [ "${CERT_MODE}" = "private" ]; then
+        echo "   TLS certificate: ${PRIVATE_CERT_SOURCE}"
+        echo "   TLS private key: ${PRIVATE_KEY_SOURCE}"
     fi
     echo ""
     
@@ -352,11 +451,18 @@ DOMAIN=${SERVER_ADDRESS}
 SERVER_ADDRESS=${SERVER_ADDRESS}
 PROTOCOL=${PROTOCOL}
 IP_MODE=${IP_MODE}
+DEPLOYMENT_MODE=${DEPLOYMENT_MODE}
 HTTPS_PORT=${HTTPS_PORT}
 HTTP_PORT=${HTTP_PORT}
+FEDERATION_ENABLED=${FEDERATION_ENABLED}
+CERT_MODE=${CERT_MODE}
+PUBLIC_BASE_URL=${PUBLIC_BASE_URL}
+WELL_KNOWN_SERVER=${WELL_KNOWN_SERVER}
 REGISTRATION_SHARED_SECRET=${REGISTRATION_SECRET}
 TURN_SECRET=${TURN_SECRET}
 LETSENCRYPT_EMAIL=${ADMIN_EMAIL}
+TLS_CERT_FILE=${TLS_CERT_FILE}
+TLS_KEY_FILE=${TLS_KEY_FILE}
 CONDUIT_IMAGE=docker.io/matrixconduit/matrix-conduit:latest
 COTURN_IMAGE=coturn/coturn:latest
 ELEMENT_IMAGE=vectorim/element-web:v1.11.50
@@ -367,9 +473,25 @@ EOF
     log_success ".env file created."
 }
 
+prepare_tls_material() {
+    if [ "${CERT_MODE}" != "private" ]; then
+        return
+    fi
+
+    log_info "Installing private/internal CA certificate material..."
+    mkdir -p certs
+    cp "${PRIVATE_CERT_SOURCE}" certs/site.crt
+    cp "${PRIVATE_KEY_SOURCE}" certs/site.key
+    chmod 600 certs/site.key
+    chmod 644 certs/site.crt
+    log_success "Private certificate material copied to ./certs."
+}
+
 setup_caddyfile() {
     log_info "Setting up Caddy..."
-    if [ "$IP_MODE" = true ]; then
+    if [ "${CERT_MODE}" = "private" ]; then
+        cp Caddyfile.private-ca Caddyfile.active
+    elif [ "$IP_MODE" = true ]; then
         cp Caddyfile.ip-mode Caddyfile.active
     else
         cp Caddyfile Caddyfile.active
@@ -379,66 +501,33 @@ setup_caddyfile() {
 
 update_element_config() {
     log_info "Configuring Element..."
-    
-    # Reset config from git to ensure placeholders exist
-    git checkout -- config/element-config.json 2>/dev/null || true
-    
-    # Replace domain placeholder
-    sed -i "s|\${DOMAIN}|${SERVER_ADDRESS}|g" config/element-config.json
-    
-    # Always use https (self-signed for IP, Let's Encrypt for domain)
-    sed -i "s|http://${SERVER_ADDRESS}|https://${SERVER_ADDRESS}|g" config/element-config.json
-    
+
+    python3 <<PY
+import json
+from pathlib import Path
+
+config_path = Path("config/element-config.json")
+config = json.loads(config_path.read_text(encoding="utf-8"))
+
+base_url = "${PUBLIC_BASE_URL}"
+server_name = "${SERVER_ADDRESS}"
+
+config.setdefault("default_server_config", {})
+config["default_server_config"]["m.homeserver"] = {
+    "base_url": base_url,
+    "server_name": server_name,
+}
+config["permalink_prefix"] = base_url
+config.setdefault("room_directory", {})
+config["room_directory"]["servers"] = [server_name]
+
+config_path.write_text(
+    json.dumps(config, ensure_ascii=False, indent=4) + "\n",
+    encoding="utf-8",
+)
+PY
+
     log_success "Element configured."
-}
-
-update_dendrite_config() {
-    log_info "Configuring Dendrite..."
-    
-    # Reset config from git to ensure placeholders exist
-    git checkout -- dendrite/dendrite.yaml 2>/dev/null || true
-    
-    # Now replace placeholders
-    sed -i "s/\${DOMAIN}/${SERVER_ADDRESS}/g" dendrite/dendrite.yaml
-    sed -i "s/\${POSTGRES_USER}/dendrite/g" dendrite/dendrite.yaml
-    sed -i "s/\${POSTGRES_PASSWORD}/${POSTGRES_PASSWORD}/g" dendrite/dendrite.yaml
-    sed -i "s/\${POSTGRES_DB}/dendrite/g" dendrite/dendrite.yaml
-    sed -i "s/\${REGISTRATION_SHARED_SECRET}/${REGISTRATION_SECRET}/g" dendrite/dendrite.yaml
-    
-    # IP mode uses port 443 with self-signed SSL
-    if [ "$IP_MODE" = true ]; then
-        sed -i "s|:443|:443|g" dendrite/dendrite.yaml
-    fi
-    log_success "Dendrite configured."
-}
-
-generate_matrix_key() {
-    log_info "Generating Matrix signing key..."
-    if [ ! -f "dendrite/matrix_key.pem" ]; then
-        load_env_if_exists
-        ensure_docker_registry_access
-        local dendrite_image="${DENDRITE_IMAGE:-matrixdotorg/dendrite-monolith:latest}"
-
-        log_info "Pulling Dendrite image (this may take a while)..."
-        docker_pull_with_mirror_fallback "$dendrite_image"
-        
-        log_info "Running key generation..."
-        docker run --rm \
-            --entrypoint /usr/bin/generate-keys \
-            -v "$(pwd)/dendrite:/etc/dendrite" \
-            "$dendrite_image" \
-            --private-key /etc/dendrite/matrix_key.pem
-        
-        if [ -f "dendrite/matrix_key.pem" ]; then
-            chmod 600 dendrite/matrix_key.pem
-            log_success "Matrix key generated."
-        else
-            log_error "Failed to generate Matrix key!"
-            exit 1
-        fi
-    else
-        log_warning "Matrix key already exists."
-    fi
 }
 
 start_services() {
@@ -485,21 +574,18 @@ print_success() {
     echo ""
     
     # Construct full URL with port if needed
-    local full_url="${PROTOCOL}://${SERVER_ADDRESS}"
-    if [ "$IP_MODE" = "true" ]; then
-        # In IP mode, always show the port
-        full_url="${full_url}:${HTTPS_PORT}"
-    elif [ "${HTTPS_PORT}" != "443" ]; then
-        # In domain mode, only show port if not standard 443
-        full_url="${full_url}:${HTTPS_PORT}"
-    fi
+    local full_url="${PUBLIC_BASE_URL}"
     
     echo "URL: ${full_url}"
     
     if [ "$IP_MODE" = true ]; then
         echo ""
-        echo -e "${YELLOW}Warning: Using self-signed SSL certificate.${NC}"
-        echo -e "${YELLOW}Browser will show security warning - click Advanced > Proceed.${NC}"
+        echo -e "${YELLOW}Warning: Using Caddy internal certificates for isolated/test-only IP mode.${NC}"
+        echo -e "${YELLOW}This is not a supported federation profile.${NC}"
+    elif [ "${CERT_MODE}" = "private" ]; then
+        echo ""
+        echo -e "${YELLOW}Private/internal CA mode selected.${NC}"
+        echo -e "${YELLOW}All participating clients and federated peers must trust the same CA chain.${NC}"
     fi
     
     echo ""
@@ -543,6 +629,7 @@ install_docker_compose
 ensure_docker_registry_access
 generate_secrets
 create_env_file
+prepare_tls_material
 setup_caddyfile
 update_element_config
 start_services

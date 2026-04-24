@@ -24,7 +24,7 @@
 
 ```bash
 cd ~/zanjir
-docker logs zanjir-dendrite > backup_info.log
+docker ps -a > migration-inventory.txt
 ```
 
 ### مرحله 2: پاک‌سازی کامل
@@ -38,11 +38,9 @@ docker compose down
 
 # حذف تمام volumeها (داده‌ها)
 docker volume rm zanjir-postgres-data \
-  zanjir-dendrite-media \
-  zanjir-dendrite-jetstream \
-  zanjir-dendrite-search \
   zanjir-caddy-data \
   zanjir-caddy-config \
+  zanjir-conduit-data \
   zanjir-element-web \
   zanjir-admin-data
 
@@ -69,8 +67,9 @@ sudo bash install.sh
 ```
 
 **نکته:** در حین نصب:
-- همان دامنه/IP قبلی را وارد کنید
-- همان پورت‌ها را انتخاب کنید (یا تغییر دهید)
+- اگر می‌خواهید اتصال کاربران قابل پیش‌بینی بماند، همان دامنه یا نام داخلی قبلی را وارد کنید
+- حالت `isolated` یا `federated` را صریح انتخاب کنید
+- اگر حالت گواهی `private` را انتخاب می‌کنید، مسیر فایل PEM گواهی و کلید جدید را بدهید
 
 ### مرحله 4: ثبت‌نام کاربران
 
@@ -137,7 +136,7 @@ curl http://localhost:6167/_matrix/client/versions
 ج: 5-10 دقیقه (بسته به سرعت اینترنت برای دانلود Docker images)
 
 **س: آیا پنل مدیریت کار می‌کند؟**  
-ج: بله، پنل مدیریت با Conduit سازگار است.
+ج: سرویس بالا می‌آید و به پشته مبتنی بر Conduit وصل است، اما مدل مجوزدهی آن هنوز ضعیف است و نباید بیش از حد به آن اعتماد کرد.
 
 **س: تماس‌های صوتی/تصویری چطور؟**  
 ج: سرور TURN همچنان کار می‌کند. تغییری نیست.

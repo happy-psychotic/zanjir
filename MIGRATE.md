@@ -24,7 +24,7 @@ Optionally note your current users:
 
 ```bash
 cd ~/zanjir
-docker logs zanjir-dendrite > backup_info.log
+docker ps -a > migration-inventory.txt
 ```
 
 ### Step 2: Complete Wipe
@@ -38,11 +38,9 @@ docker compose down
 
 # Remove ALL volumes (data)
 docker volume rm zanjir-postgres-data \
-  zanjir-dendrite-media \
-  zanjir-dendrite-jetstream \
-  zanjir-dendrite-search \
   zanjir-caddy-data \
   zanjir-caddy-config \
+  zanjir-conduit-data \
   zanjir-element-web \
   zanjir-admin-data
 
@@ -69,8 +67,9 @@ sudo bash install.sh
 ```
 
 **Note:** During installation:
-- Use the same domain/IP as before
-- Choose the same ports (or change if needed)
+- Use the same domain or internal server name if you want clients to reconnect predictably
+- Choose `isolated` or `federated` mode explicitly
+- If you choose `private` certificate mode, provide PEM paths for the replacement server certificate and key
 
 ### Step 4: User Registration
 
@@ -137,7 +136,7 @@ A: No. Dendrite and Conduit use different databases. Migration is not possible.
 A: 5-10 minutes (depending on internet speed for Docker images)
 
 **Q: Does admin panel work?**  
-A: Yes, the admin panel is compatible with Conduit.
+A: It starts and is wired to the Conduit-based stack, but its authorization model is still weak and should not be overtrusted.
 
 **Q: What about voice/video calls?**  
 A: TURN server still works. No changes.

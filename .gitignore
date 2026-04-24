@@ -1,10 +1,16 @@
 # Environment
 .env
 *.env.local
+Caddyfile.active
 
 # Dendrite keys and data
 dendrite/matrix_key.pem
 dendrite/data/
+
+# Operator TLS material
+certs/*.crt
+certs/*.key
+certs/*.pem
 
 # PostgreSQL data
 postgres-data/
