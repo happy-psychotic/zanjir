@@ -24,8 +24,6 @@ Likely code areas or files affected:
 
 - `README.md`
 - `README-FA.md`
-- `MIGRATE.md`
-- `MIGRATE-FA.md`
 - `install.sh`
 - `docker-compose.yml`
 

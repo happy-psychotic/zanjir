@@ -15,7 +15,8 @@ Current repository facts from inspected files:
 - The active runtime stack is `Conduit + Element Web + Caddy + coturn + a small Flask admin panel` in [docker-compose.yml](/home/saeid/Documents/Codex/Zanjir/docker-compose.yml:1).
 - The admin panel is custom but thin, and many admin actions are placeholders rather than complete server-management logic in [admin/app.py](/home/saeid/Documents/Codex/Zanjir/admin/app.py:121).
 - The installer now supports explicit `isolated` versus `federated` mode selection, writes deployment metadata into `.env`, copies private-CA PEM material into `./certs` when selected, and activates the matching Caddy template in [install.sh](/home/saeid/Documents/Codex/Zanjir/install.sh:1).
-- The repository has begun cleanup of stale Dendrite-era drift: dead Dendrite installer functions and helper files were removed, and the English README no longer points operators to Dendrite-only account creation and PostgreSQL-era backup guidance.
+- The repository has begun cleanup of stale Dendrite-era drift: dead Dendrite installer functions and helper files were removed, the migration-only Markdown guides were deleted, and the English README no longer points operators to Dendrite-only account creation and PostgreSQL-era backup guidance.
+- The compose stack now separates container listener ports from host-published ports via `HOST_HTTP_PORT` and `HOST_HTTPS_PORT`, which makes it practical to place Zanjir behind an existing host reverse proxy without colliding with other services.
 - Matrix federation is now env-controlled in the compose stack via `CONDUIT_ALLOW_FEDERATION: "${FEDERATION_ENABLED:-false}"` in [docker-compose.yml](/home/saeid/Documents/Codex/Zanjir/docker-compose.yml:17), but the installer still defaults new installs to isolated mode.
 
 ## What Zanjir Actually Is
@@ -43,7 +44,7 @@ Current repo state is a single-server Matrix deployment biased toward isolated u
 - IP-only mode exists, but it is designed for local access convenience, not robust multi-server federation
 - Element compatibility already exists
 - security and operational guidance are incomplete
-- some documentation still needs deeper operational hardening work, but the main README, Persian README, and migration guides now describe the Conduit-based runtime and deployment modes more truthfully
+- some documentation still needs deeper operational hardening work, but the main README and Persian README now describe the Conduit-based runtime and deployment modes more truthfully
 
 ## Target Product Vision
 
@@ -236,7 +237,7 @@ Prepare the repo for the final full-federation architecture using the selected n
 - Current admin panel is not a trustworthy control plane.
 - Current IP-mode HTTPS is not a credible federation story for independent operators.
 - Current docs contain materially incorrect statements inherited from Dendrite-era content.
-- English README and installer cleanup has started, but README-FA and migration-era content still need review.
+- English README and installer cleanup has started, and the migration-only docs have now been removed; README-FA still needs ongoing review for any operational drift.
 
 ## Required Direct Answers
 

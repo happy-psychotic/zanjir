@@ -32,7 +32,6 @@ Custom repository components:
 Legacy or stale components:
 
 - `dendrite/` config and key-generation paths
-- migration docs
 - README sections still describing Dendrite commands and PostgreSQL
 
 ## What Is Upstream vs Custom
@@ -99,9 +98,11 @@ This is lighter and safer than building custom messaging infrastructure.
 Implemented in the repo:
 
 - `docker-compose.yml` now mounts `./certs` into Caddy and passes `PUBLIC_BASE_URL`, `WELL_KNOWN_SERVER`, and TLS file env vars.
+- `docker-compose.yml` now separates host-published ports from container listener ports, so Zanjir can run behind an existing host nginx or similar reverse proxy without reusing the same public ports internally.
 - `install.sh` now selects between `isolated` and `federated` mode, blocks federation-grade assumptions from IP-only installs, writes deployment metadata into `.env`, and copies private/internal CA PEM files into `./certs`.
 - `Caddyfile` now represents the public-CA domain path, `Caddyfile.private-ca` represents the operator-provided PEM path, and `Caddyfile.ip-mode` is explicitly limited to isolated/test use.
 - `.well-known` responses and Element config now follow generated deployment values instead of hardcoded public-domain assumptions.
+- migration-only markdown guides were removed because they duplicated the live Conduit install flow without adding operational value.
 
 ## Federation Design
 
