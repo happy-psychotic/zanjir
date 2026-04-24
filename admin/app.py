@@ -9,7 +9,7 @@ import sqlite3
 import requests
 from datetime import datetime
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from dotenv import load_dotenv
 
 load_dotenv('../.env')
@@ -19,8 +19,19 @@ app.secret_key = os.getenv('REGISTRATION_SHARED_SECRET', 'change-me-in-productio
 
 # Configuration
 CONDUIT_URL = os.getenv('CONDUIT_URL', 'http://conduit:6167')
-ADMIN_SECRET = os.getenv('REGISTRATION_SHARED_SECRET')
 DOMAIN = os.getenv('DOMAIN', 'localhost')
+
+
+def parse_admin_users(raw_admin_users):
+    admin_users = set()
+    for item in raw_admin_users.split(','):
+        candidate = item.strip()
+        if candidate:
+            admin_users.add(candidate)
+    return admin_users
+
+
+ADMIN_USERS = parse_admin_users(os.getenv('ADMIN_USERS', ''))
 
 # Initialize audit log database
 def init_db():
@@ -98,19 +109,18 @@ def login():
             
             if response.status_code == 200:
                 data = response.json()
-                # Check if user is admin
                 user_id = data.get('user_id', '')
-                
-                # Simple admin check - you may want to make this more sophisticated
-                if username.endswith('-admin') or check_if_admin(user_id):
+
+                if check_if_admin(user_id):
                     session['logged_in'] = True
                     session['username'] = username
+                    session['user_id'] = user_id
                     session['access_token'] = data.get('access_token')
                     log_audit('LOGIN', details='Admin logged in successfully')
                     flash('Logged in successfully!', 'success')
                     return redirect(url_for('dashboard'))
                 else:
-                    flash('Access denied. Admin privileges required.', 'danger')
+                    flash('Access denied. This account is not in ADMIN_USERS.', 'danger')
             else:
                 flash('Invalid credentials', 'danger')
         except Exception as e:
@@ -119,10 +129,8 @@ def login():
     return render_template('login.html')
 
 def check_if_admin(user_id):
-    """Check if user has admin privileges via Conduit API"""
-    # This is a placeholder - implement actual admin check
-    # You might need to query Conduit's database or use admin API
-    return True  # For now, allow anyone who can login
+    """Check if the Matrix user ID is explicitly allowlisted."""
+    return bool(user_id) and user_id in ADMIN_USERS
 
 @app.route('/logout')
 def logout():

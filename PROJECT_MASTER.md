@@ -13,7 +13,7 @@ Zanjir is primarily a deployment bundle and installer, not a custom messaging pr
 Current repository facts from inspected files:
 
 - The active runtime stack is `Conduit + Element Web + Caddy + coturn + a small Flask admin panel` in [docker-compose.yml](/home/saeid/Documents/Codex/Zanjir/docker-compose.yml:1).
-- The admin panel is custom but thin, and many admin actions are placeholders rather than complete server-management logic in [admin/app.py](/home/saeid/Documents/Codex/Zanjir/admin/app.py:121).
+- The admin panel is custom but thin; login is now constrained by an explicit `ADMIN_USERS` allowlist, while many admin actions remain placeholders rather than complete server-management logic in [admin/app.py](/home/saeid/Documents/Codex/Zanjir/admin/app.py:1).
 - The installer now supports explicit `isolated` versus `federated` mode selection, writes deployment metadata into `.env`, copies private-CA PEM material into `./certs` when selected, and activates the matching Caddy template in [install.sh](/home/saeid/Documents/Codex/Zanjir/install.sh:1).
 - The repository has begun cleanup of stale Dendrite-era drift: dead Dendrite installer functions and helper files were removed, the migration-only Markdown guides were deleted, and the English README no longer points operators to Dendrite-only account creation and PostgreSQL-era backup guidance.
 - The compose stack now separates container listener ports from host-published ports via `HOST_HTTP_PORT` and `HOST_HTTPS_PORT`, which makes it practical to place Zanjir behind an existing host reverse proxy without colliding with other services.

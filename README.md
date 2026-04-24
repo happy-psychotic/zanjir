@@ -115,6 +115,12 @@ After installation completes, open the web client and register normally:
 3. Choose username and password
 4. Log in through Element Web
 
+Admin note:
+
+- normal user self-registration stays open
+- `/admin` only allows Matrix IDs listed in `ADMIN_USERS` inside `.env`
+- use full Matrix IDs such as `@saeid-admin:chat.irani-site.ir`
+
 Current note:
 
 - the repository no longer uses the old Dendrite `create-account` command path
@@ -217,10 +223,17 @@ Visit: `https://your-domain.com/admin`
 
 Login with your account credentials.
 
-Current limitation:
+Current behavior:
 
-- the admin panel is still a thin convenience UI with placeholder-grade authorization logic in `admin/app.py`
-- do not treat it as the authoritative security boundary for operator actions yet
+- the admin panel is still a thin convenience UI rather than a full homeserver control plane
+- admin login is restricted to Matrix IDs explicitly listed in `ADMIN_USERS`
+- normal user registration remains open and independent from admin access
+
+Example:
+
+```dotenv
+ADMIN_USERS=@saeid-admin:chat.irani-site.ir,@ops:chat.irani-site.ir
+```
 
 ### Features
 

@@ -60,7 +60,7 @@ Should likely be replaced or reduced:
 
 - `CONDUIT_ALLOW_FEDERATION` is set to false.
 - `.well-known` responses were previously tied to the old public-domain path; they now follow installer-generated `PUBLIC_BASE_URL` and `WELL_KNOWN_SERVER` values.
-- admin panel authorization is not real; `check_if_admin()` currently returns true for any successful login in [admin/app.py](/home/saeid/Documents/Codex/Zanjir/admin/app.py:121).
+- admin panel authorization now depends on an explicit `ADMIN_USERS` allowlist in `.env`, but the panel is still a thin convenience UI rather than a full homeserver-backed admin plane.
 - audit logging is local SQLite only and not tied to authoritative server-side admin actions.
 - the installer previously collapsed certificate handling into a simple domain-versus-IP split; it now supports explicit isolated/federated deployment mode and public/private certificate mode selection.
 
